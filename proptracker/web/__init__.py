@@ -17,7 +17,7 @@ from typing import Optional
 
 from flask import Flask, g, jsonify, render_template, request
 
-from . import charts
+from . import branding, charts
 from .. import brief, config
 from .. import db as db_module
 from ..aggregate import CLASS_LABELS, ROUND_TRIP, STOCK_DIRECTIONAL_CLASSES
@@ -170,10 +170,12 @@ def create_app(db_path=None) -> Flask:
             else []
         )
         matrix = charts.firm_stock_matrix(connection, the_date) if the_date else None
+        firmwall = branding.firm_tiles(connection, the_date)
         return render_template(
             "dashboard.html",
             the_date=the_date,
             dates=dates,
+            firmwall=firmwall,
             stocks=stocks,
             kpis=kpis,
             stance=stance,

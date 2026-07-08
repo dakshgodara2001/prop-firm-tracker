@@ -25,6 +25,21 @@
 <div class="panel"><span class="muted">No tracked prop/HFT firms appeared in bulk/block deals on {{ the_date }}.</span></div>
 {% else %}
 
+<h2 style="margin-top:6px">Coverage universe
+  <span class="amber">// {{ firmwall.active }} of {{ firmwall.total }} tracked firms active this session</span></h2>
+<div class="panel">
+  <div class="firmwall">
+    {% for t in firmwall.tiles %}
+    <a class="ftile {{ 'live' if t.active }}" href="{{ url_for('firm', firm_id=t.id) }}"
+       style="--a:{{ t.accent }}" title="{{ t.name }}{{ ' — active ' ~ the_date if t.active }}">
+      <span class="mono">{{ t.monogram }}</span>
+      <span class="nm">{{ t.short }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  <p class="note">Lit tiles traded in bulk/block deals on {{ the_date }}. Monograms are generated identifiers, not the firms' trademarks.</p>
+</div>
+
 <div class="stance">{{ stance }}</div>
 
 {# Daily overview: KPI strip + week-at-a-glance gross bars #}
