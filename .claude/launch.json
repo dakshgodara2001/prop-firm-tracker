@@ -4,8 +4,9 @@
     {
       "name": "dashboard",
       "runtimeExecutable": ".venv/bin/python",
-      "runtimeArgs": ["main.py", "serve", "--port", "8050"],
-      "port": 8050
+      "runtimeArgs": ["main.py", "serve"],
+      "port": 8050,
+      "autoPort": true
     }
   ]
 }

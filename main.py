@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 import time
 from datetime import date, timedelta
@@ -540,7 +541,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("serve", help="run the stock-first dashboard")
     p.add_argument("--host", default="127.0.0.1")
-    p.add_argument("--port", type=int, default=8050)
+    p.add_argument("--port", type=int, default=int(os.environ.get("PORT", 8050)))
     p.add_argument("--debug", action="store_true")
     p.add_argument("--production", action="store_true",
                    help="serve with waitress instead of the Flask dev server")

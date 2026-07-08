@@ -68,11 +68,20 @@
       </ul>
       {% else %}<span class="muted">Routine churn only — nothing directional to flag.</span>{% endif %}
     </div>
+    {% if changes.prev_date %}
+    <h2>What changed <span class="amber">vs {{ changes.prev_date }}</span></h2>
+    <div class="panel">
+      <ul class="cols2">
+      {% for b in changes.bullets %}<li>{{ b|replace('**','')|safe }}</li>{% else %}
+        <li class="muted">Entirely fresh set of names.</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endif %}
 
-{% if changes.prev_date %}
+{% if not matrix and changes.prev_date %}
 <h2>What changed <span class="amber">vs {{ changes.prev_date }}</span></h2>
 <div class="panel rail">
   <ul class="cols2">
