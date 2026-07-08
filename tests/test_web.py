@@ -47,15 +47,6 @@ def test_dashboard_shows_command_center_sections(client):
     assert "not buy/sell advice" in html
 
 
-def test_dashboard_has_coverage_universe_wall(client):
-    html = client.get("/").get_data(as_text=True)
-    assert "Coverage universe" in html
-    assert "tracked firms active this session" in html
-    assert 'class="ftile' in html          # monogram tiles
-    assert "ftile live" in html            # at least one firm active today
-    assert "not the firms' trademarks" in html   # honest labelling, no real logos
-
-
 def test_dashboard_has_firm_stock_matrix(client):
     html = client.get("/").get_data(as_text=True)
     assert "Firm × stock activity map" in html

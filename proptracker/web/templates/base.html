@@ -145,30 +145,20 @@
   .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   @media (max-width:950px){ .grid { grid-template-columns:1fr; } }
   ul.explain { padding-left:18px; margin:8px 0; } ul.explain li { margin-bottom:8px; }
-  /* Coverage-universe wall — generated monogram tiles (not real logos) */
-  .firmwall { display:flex; flex-wrap:wrap; gap:7px; }
-  .ftile { position:relative; width:86px; height:58px; border-radius:7px; overflow:hidden;
-           border:1px solid var(--line); background:var(--surface-2);
-           display:flex; flex-direction:column; align-items:center; justify-content:center;
-           gap:2px; text-decoration:none; transition:transform .1s, border-color .1s; }
-  .ftile::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--a); opacity:.4; }
-  .ftile .mono { font:800 18px var(--mono); letter-spacing:.02em; color:var(--ink-3); }
-  .ftile .nm { font:8.5px var(--mono); text-transform:uppercase; letter-spacing:.04em; color:var(--ink-3);
-               max-width:78px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .ftile:hover { transform:translateY(-2px); border-color:var(--a); text-decoration:none; }
-  .ftile.live { border-color:var(--a);
-                background:linear-gradient(150deg, color-mix(in srgb, var(--a) 26%, var(--surface-2)), var(--surface-2) 70%); }
-  .ftile.live::before { opacity:1; }
-  .ftile.live .mono { color:#fff; }
-  .ftile.live .nm { color:var(--ink); }
-  .ftile.live::after { content:""; position:absolute; top:6px; right:6px; width:6px; height:6px;
-                       border-radius:50%; background:var(--a); box-shadow:0 0 6px var(--a); }
   .legend { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; }
   .legend span { display:inline-flex; align-items:center; gap:5px; font:11px var(--mono); color:var(--ink-2); }
   .legend i { width:9px; height:9px; border-radius:50%; display:inline-block; }
   svg text { fill:var(--ink-2); }
   .datebar a { margin-right:9px; font:600 11px var(--mono); }
   .datebar .cur { color:var(--accent); font:700 11px var(--mono); margin-right:9px; }
+  .tagline { background:var(--surface-2); border-bottom:1px solid var(--line); color:var(--ink-2);
+             font-size:12px; padding:6px 20px; letter-spacing:.01em; }
+  .tagline b { color:var(--ink); font-weight:600; }
+  #tip { position:fixed; z-index:80; display:none; max-width:340px; pointer-events:none;
+         background:var(--inset); border:1px solid var(--line); border-radius:6px; padding:7px 10px;
+         font:11.5px/1.5 var(--mono); color:var(--ink); white-space:pre-line;
+         box-shadow:0 8px 24px rgba(0,0,0,.55); }
+  [data-tip] { cursor:default; }
   .disclaimer { color:var(--ink-3); font-size:10.5px; margin-top:26px; border-top:1px solid var(--line);
                 padding-top:9px; }
 </style>
@@ -183,10 +173,35 @@
     <a href="{{ url_for('alerts_page') }}">Alerts</a>
   </nav>
 </header>
+<div class="tagline">Which stocks are India's <b>prop, HFT &amp; quant firms</b> trading — from official <b>NSE &amp; BSE</b> bulk &amp; block deal disclosures, ranked by how much tracked-firm attention each stock drew.</div>
 <main>
 {% block content %}{% endblock %}
 <p class="disclaimer">ATTENTION SCORES AND ALERTS RANK TRACKED-FIRM ACTIVITY — not buy/sell advice, no return prediction.
 Sources: NSE (primary) &amp; BSE (secondary) official disclosures.</p>
 </main>
+<div id="tip" role="tooltip"></div>
+<script>
+(function () {
+  var tip = document.getElementById('tip');
+  function place(e) {
+    var pad = 14, r = tip.getBoundingClientRect();
+    var x = e.clientX + pad, y = e.clientY + pad;
+    if (x + r.width > window.innerWidth) x = e.clientX - r.width - pad;
+    if (y + r.height > window.innerHeight) y = e.clientY - r.height - pad;
+    tip.style.left = x + 'px'; tip.style.top = Math.max(6, y) + 'px';
+  }
+  function target(e) { return e.target && e.target.closest ? e.target.closest('[data-tip]') : null; }
+  document.addEventListener('mouseover', function (e) {
+    var el = target(e); if (!el) return;
+    tip.textContent = el.getAttribute('data-tip'); tip.style.display = 'block'; place(e);
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (tip.style.display !== 'block') return;
+    if (!target(e)) { tip.style.display = 'none'; return; }
+    place(e);
+  });
+  document.addEventListener('mouseout', function (e) { if (target(e)) tip.style.display = 'none'; });
+})();
+</script>
 </body>
 </html>

@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import html
 import sqlite3
-from typing import List, Optional
+from typing import Optional
+
+from ..aggregate import CLASS_LABELS
 
 # classification -> CSS custom property (defined in base.html :root)
 _FLOW_VAR = {
@@ -38,6 +40,12 @@ def _cr(v: float) -> str:
 
 def _esc(s: str) -> str:
     return html.escape(str(s), quote=True)
+
+
+def _tipattr(text: str) -> str:
+    """Escape a multi-line tooltip string into an HTML attribute value
+    (newlines as &#10; so the parser preserves them for `white-space: pre-line`)."""
+    return _esc(text).replace("\n", "&#10;")
 
 
 def _radius(gross: float, gmax: float, rmin: float = 4.0, rmax: float = 13.0) -> float:
@@ -129,12 +137,15 @@ def firm_stock_matrix(conn: sqlite3.Connection, trade_date: str,
                 continue
             rad = _radius(r["gross"], gmax)
             var = _FLOW_VAR.get(r["classification"], "--churn")
-            title = (f"{f} · {s} — buy {_cr(r['buy_value'])} / sell {_cr(r['sell_value'])}"
-                     f" · net {_cr(r['net_value'])}")
+            flow = CLASS_LABELS.get(r["classification"], r["classification"])
+            tip = (f"{f}  ·  {s}\n{flow}\n"
+                   f"buy {_cr(r['buy_value'])}   sell {_cr(r['sell_value'])}\n"
+                   f"net {_cr(r['net_value'])}")
+            a = _tipattr(tip)
             svg.append(
                 f'<circle cx="{cx(i):.1f}" cy="{cy(j):.1f}" r="{rad:.1f}" '
                 f'fill="var({var})" fill-opacity="0.9" stroke="var(--surface)" '
-                f'stroke-width="1.5"><title>{_esc(title)}</title></circle>'
+                f'stroke-width="1.5" data-tip="{a}" aria-label="{a}"/>'
             )
     svg.append("</svg>")
     return {
@@ -230,12 +241,14 @@ def stock_price_svg(conn: sqlite3.Connection, symbol: str,
         marker_count += 1
         rad = _radius(t["gross"], gmax, rmin=4.0, rmax=10.0)
         var = _FLOW_VAR.get(t["classification"], "--churn")
-        title = (f"{d} — {t['firm_count']} firm(s), {t['classification'].replace('_', ' ').lower()},"
-                 f" {_cr(t['gross'])} gross · {t['firm_names']}")
+        flow = CLASS_LABELS.get(t["classification"], t["classification"])
+        tip = (f"{d}\n{flow}  ·  {t['firm_count']} firm(s)\n"
+               f"gross {_cr(t['gross'])}\n{t['firm_names']}")
+        a = _tipattr(tip)
         svg.append(
             f'<circle cx="{px(i):.1f}" cy="{py(closes[i]):.1f}" r="{rad:.1f}" '
-            f'fill="var({var})" fill-opacity="0.92" stroke="var(--bg)" stroke-width="1.5">'
-            f'<title>{_esc(title)}</title></circle>'
+            f'fill="var({var})" fill-opacity="0.92" stroke="var(--bg)" stroke-width="1.5" '
+            f'data-tip="{a}" aria-label="{a}"/>'
         )
     svg.append("</svg>")
     return {"svg": "".join(svg), "sessions": n, "markers": marker_count}
