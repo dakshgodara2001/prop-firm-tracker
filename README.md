@@ -15,7 +15,3 @@ disclosures**.
 - Fires rule-based alerts for high-attention days, multi-firm clusters and first-time mentions
 - Serves a command-center dashboard and daily markdown reports
 
-## Disclaimer
-
-Attention scores and alerts rank tracked-firm activity — they are not buy/sell
-advice and predict no returns.
