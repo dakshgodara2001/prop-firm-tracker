@@ -82,7 +82,7 @@ def test_changes_vs_previous_detects_shift_and_dropouts(conn):
 def test_checklist_watchlist_and_fallback(conn):
     stocks = brief.enrich_stocks(conn, DATE)
     items = brief.follow_up_checklist(conn, DATE, stocks, [])
-    assert items == ["Nothing actionable — churn-only day. Skim the liquidity table and move on."]
+    assert items == ["No directional follow-ups today — activity was liquidity/churn only."]
 
     _seed_stock(conn, "WATCHCO", "CLEAN_BUY", "Graviton Research Capital",
                 buy_value=6e7)

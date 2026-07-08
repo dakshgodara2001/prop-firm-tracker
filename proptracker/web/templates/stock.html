@@ -4,7 +4,7 @@
 <h1>{{ symbol }} <span class="badge flow-{{ latest.classification }}">{{ latest.classification|flow }}</span>
     {% if latest.first_time %}<span class="star">★ first-time</span>{% endif %}</h1>
 <p class="sub">{{ latest.security_name or "" }} · last activity {{ latest.trade_date }} ·
-   {{ appearances|length }} appearance(s) in stored history ·
+   {{ appearances|length }} tracked appearance(s) ·
    first seen {{ appearances[-1].trade_date }}</p>
 
 <div class="tiles">
@@ -92,7 +92,7 @@
       </tr>
       {% endfor %}
       </table>
-    {% else %}<p class="muted">No NSE price history stored for this symbol (BSE-only listing or missing backfill).</p>{% endif %}
+    {% else %}<p class="muted">No exchange price history available for this symbol (e.g. a BSE-only listing).</p>{% endif %}
     </div>
   </div>
 </div>

@@ -73,7 +73,7 @@ def test_stock_page_case_insensitive_and_404(client):
     assert client.get("/stock/alphaco").status_code == 200
     response = client.get("/stock/NOSUCH")
     assert response.status_code == 404
-    assert "No stored data" in response.get_data(as_text=True)
+    assert "No data available" in response.get_data(as_text=True)
 
 
 def test_firm_pages(client):

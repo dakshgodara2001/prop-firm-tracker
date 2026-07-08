@@ -167,7 +167,7 @@ def build_explanation(stock: sqlite3.Row, ctx: Optional[sqlite3.Row],
         text += f" The stock moved {day_move:+.1f}% on the day."
 
     if stock["first_time"]:
-        text += " First appearance in stored history."
+        text += " First time this stock has appeared in tracked-firm deals."
     elif repeat_count:
         text += (
             f" Also appeared on {repeat_count} day(s) in the last "

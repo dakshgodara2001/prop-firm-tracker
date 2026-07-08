@@ -88,7 +88,7 @@ def test_clean_buy_explanation_and_context(conn):
     assert "worth tracking" in text
     assert "Volume ran 3.2× the 20-day average" in text
     assert "+2.5% on the day" in text
-    assert "First appearance in stored history." in text
+    assert "First time this stock has appeared in tracked-firm deals." in text
     assert json.loads(row["components"])["context"] is not None
 
 

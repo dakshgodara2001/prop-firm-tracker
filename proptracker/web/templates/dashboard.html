@@ -20,7 +20,7 @@
 </div>
 
 {% if not the_date %}
-<div class="panel"><span class="muted">No processed data yet — run <code>python main.py run-daily</code>.</span></div>
+<div class="panel"><span class="muted">No sessions available yet — the first day's disclosures will appear here after market close.</span></div>
 {% elif not stocks %}
 <div class="panel"><span class="muted">No tracked prop/HFT firms appeared in bulk/block deals on {{ the_date }}.</span></div>
 {% else %}
@@ -51,7 +51,7 @@
 <div class="layout">
 <div>
   {# The single source of truth: one grid, faceted by chips. #}
-  <h2>Stocks picked by tracked firms <span class="amber">// click a row for the read</span></h2>
+  <h2>Stocks picked by tracked firms <span class="amber">// click any row to expand</span></h2>
   <div class="chips" id="chips">
     <span class="chip on" data-k="all">All<span class="n">{{ stocks|length }}</span></span>
     <span class="chip" data-k="high">High attention<span class="n">{{ sections.high|length }}</span></span>

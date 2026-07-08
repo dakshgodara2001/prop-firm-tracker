@@ -235,8 +235,8 @@ def follow_up_checklist(conn: sqlite3.Connection, trade_date: str,
         (trade_date,),
     ).fetchone()[0]
     if failed:
-        items.append("Data health: a bulk/block fetch failed — re-run "
-                     f"`python main.py run-daily --date {trade_date}`.")
+        items.append("Data note: one or more deal feeds were incomplete today — "
+                     "treat today's coverage as partial.")
     if not items:
-        items.append("Nothing actionable — churn-only day. Skim the liquidity table and move on.")
+        items.append("No directional follow-ups today — activity was liquidity/churn only.")
     return items[:6]
