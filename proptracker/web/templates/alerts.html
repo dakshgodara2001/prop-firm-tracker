@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Alerts{% endblock %}
+{% block content %}
+<h1>Alerts</h1>
+<p class="sub">Rule-based flags on unusual tracked-firm attention — discovery prompts, not trade advice.</p>
+{% if by_date %}
+  {% for d, items in by_date.items() %}
+  <h2>{{ d }}</h2>
+  <div class="card">
+    <ul class="explain">
+    {% for a in items %}
+      <li><span class="prio-{{ a.priority }}">●</span>
+          <span class="alert-type">{{ a.alert_type|alert_label }}</span>
+          <a href="{{ url_for('stock', symbol=a.symbol) }}"><strong>{{ a.symbol }}</strong></a>
+          — {{ a.message }}</li>
+    {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+{% else %}
+<div class="card"><p class="muted">No alerts stored yet — run <code>python main.py run-daily</code>.</p></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,27 @@
+# Caddy config for the dashboard. Caddy provisions and renews HTTPS
+# certificates automatically for SITE_ADDRESS via Let's Encrypt.
+#
+# SITE_ADDRESS / ACME_EMAIL come from the .env file (see .env.example).
+# To password-protect the site, uncomment the basicauth block below and set
+# BASIC_AUTH_USER / BASIC_AUTH_HASH in .env (generate the hash with:
+#   docker compose run --rm caddy caddy hash-password --plaintext 'yourpass').
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# --- optional login (uncomment to lock the site down) ---
+	# basicauth {
+	# 	{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
+	# }
+
+	# health check stays open even if auth is on, for uptime monitors
+	handle /healthz {
+		reverse_proxy web:8050
+	}
+
+	reverse_proxy web:8050
+}

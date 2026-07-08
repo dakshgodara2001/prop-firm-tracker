@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}{{ symbol }} — stock page{% endblock %}
+{% block content %}
+<h1>{{ symbol }} <span class="badge flow-{{ latest.classification }}">{{ latest.classification|flow }}</span>
+    {% if latest.first_time %}<span class="star">★ first-time</span>{% endif %}</h1>
+<p class="sub">{{ latest.security_name or "" }} · last activity {{ latest.trade_date }} ·
+   {{ appearances|length }} appearance(s) in stored history ·
+   first seen {{ appearances[-1].trade_date }}</p>
+
+<div class="tiles">
+  <div class="tile"><div class="v"><span class="attn">{{ latest.attention|attn }}</span></div><div class="k">attention ({{ latest.trade_date }})</div></div>
+  <div class="tile"><div class="v">{{ latest.firm_count }}</div><div class="k">tracked firms</div></div>
+  <div class="tile"><div class="v">{{ latest.gross_value|cr }}</div><div class="k">gross ₹ Cr</div></div>
+  <div class="tile"><div class="v">{{ latest.net_value|cr }}</div><div class="k">net ₹ Cr</div></div>
+  {% if latest.close is not none %}
+  <div class="tile"><div class="v">{{ latest.close|price }}</div><div class="k">close</div></div>
+  <div class="tile"><div class="v">{{ latest.day_return_pct|pct }}</div><div class="k">day move</div></div>
+  <div class="tile"><div class="v">{{ latest.volume_vs_adv|xadv }}</div><div class="k">vol vs ADV20</div></div>
+  <div class="tile"><div class="v">{% if latest.deliv_per is not none %}{{ latest.deliv_per }}%{% else %}–{% endif %}</div><div class="k">delivery</div></div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <strong>Latest read ({{ latest.trade_date }}):</strong> {{ latest.explanation or "No explanation computed." }}
+</div>
+
+<h2>Firm-wise activity on {{ latest.trade_date }}</h2>
+<div class="card">
+<table>
+<tr><th>Firm</th><th>Type</th><th>Class</th><th class="num">Buy qty</th><th class="num">Sell qty</th>
+    <th class="num">Buy ₹Cr</th><th class="num">Sell ₹Cr</th><th class="num">Gross ₹Cr</th><th class="num">Net ₹Cr</th></tr>
+{% for f in firm_rows %}
+<tr>
+  <td><a href="{{ url_for('firm', firm_id=f.firm_id) }}">{{ f.firm_name }}</a></td>
+  <td>{{ f.deal_type }}</td>
+  <td><span class="badge flow-{{ f.classification }}">{{ f.classification|flow }}</span></td>
+  <td class="num">{{ f.buy_qty|num }}</td>
+  <td class="num">{{ f.sell_qty|num }}</td>
+  <td class="num">{{ f.buy_value|cr }}</td>
+  <td class="num">{{ f.sell_value|cr }}</td>
+  <td class="num">{{ (f.buy_value + f.sell_value)|cr }}</td>
+  <td class="num">{{ f.net_value|cr }}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+<div class="grid">
+  <div>
+    <h2>Appearance history</h2>
+    <div class="card">
+    <table>
+    <tr><th>Date</th><th>Attention</th><th>Flow</th><th class="num">Firms</th><th class="num">Gross ₹Cr</th><th class="num">Net ₹Cr</th></tr>
+    {% for s in appearances %}
+    <tr>
+      <td>{{ s.trade_date }}</td>
+      <td><span class="attn">{{ s.attention|attn }}</span></td>
+      <td><span class="badge flow-{{ s.classification }}">{{ s.classification|flow }}</span></td>
+      <td class="num">{{ s.firm_count }}</td>
+      <td class="num">{{ s.gross_value|cr }}</td>
+      <td class="num">{{ s.net_value|cr }}</td>
+    </tr>
+    {% endfor %}
+    </table>
+    </div>
+
+    <h2>Alerts for this stock</h2>
+    <div class="card">
+    {% if stock_alerts %}
+      <ul class="explain">
+      {% for a in stock_alerts %}
+      <li><span class="muted">{{ a.trade_date }}</span> <span class="alert-type">{{ a.alert_type|alert_label }}</span> {{ a.message }}</li>
+      {% endfor %}
+      </ul>
+    {% else %}<p class="muted">None yet.</p>{% endif %}
+    </div>
+  </div>
+
+  <div>
+    <h2>Price / volume context (last {{ prices|length }} sessions)</h2>
+    <div class="card">
+    {% if prices %}
+      <table>
+      <tr><th>Date</th><th class="num">Close</th><th class="num">Day</th><th class="num">Volume</th><th class="num">Delivery %</th></tr>
+      {% for p in prices %}
+      <tr>
+        <td>{{ p.trade_date }}</td>
+        <td class="num">{{ p.close|price }}</td>
+        <td class="num">{% if p.prev_close and p.close is not none %}{{ ((p.close - p.prev_close) / p.prev_close * 100)|pct }}{% else %}–{% endif %}</td>
+        <td class="num">{{ p.volume|num }}</td>
+        <td class="num">{{ p.deliv_per if p.deliv_per is not none else "–" }}</td>
+      </tr>
+      {% endfor %}
+      </table>
+    {% else %}<p class="muted">No NSE price history stored for this symbol (BSE-only listing or missing backfill).</p>{% endif %}
+    </div>
+  </div>
+</div>
+
+<h2>Raw deal rows (tracked firms, as disclosed)</h2>
+<div class="card">
+<table>
+<tr><th>Date</th><th>Src</th><th>Type</th><th>Firm</th><th>Side</th><th class="num">Qty</th>
+    <th class="num">Price</th><th class="num">Value ₹Cr</th><th class="wrap">Disclosed client name</th></tr>
+{% for r in raw_rows %}
+<tr>
+  <td>{{ r.trade_date }}</td>
+  <td>{{ r.source }}</td>
+  <td>{{ r.deal_type }}</td>
+  <td><a href="{{ url_for('firm', firm_id=r.firm_id) }}">{{ r.firm_name }}</a></td>
+  <td>{{ r.side }}</td>
+  <td class="num">{{ r.quantity|num }}</td>
+  <td class="num">{{ r.price|price }}</td>
+  <td class="num">{{ (r.quantity * (r.price or 0))|cr }}</td>
+  <td class="wrap muted">{{ r.client_name }}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+{% endblock %}

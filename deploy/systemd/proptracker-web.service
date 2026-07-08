@@ -1,0 +1,18 @@
+# Dashboard as a systemd service (bare-metal / VM deployment).
+#   sudo cp deploy/systemd/proptracker-web.service /etc/systemd/system/
+#   sudo systemctl enable --now proptracker-web
+# Adjust paths and User to your install.
+[Unit]
+Description=Prop-Firm Deal Intelligence dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=proptracker
+WorkingDirectory=/opt/prop-firm-tracker
+ExecStart=/opt/prop-firm-tracker/.venv/bin/waitress-serve --host=127.0.0.1 --port=8050 wsgi:app
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

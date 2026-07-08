@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Stocks{% endblock %}
+{% block content %}
+<h1>Stocks touched by tracked firms</h1>
+<p class="sub">{{ rows|length }} symbol(s) in stored history. Click through for the full stock page.</p>
+<input class="filter" id="q" type="text" placeholder="Filter symbols…" oninput="flt()">
+<div class="card">
+<table id="tbl">
+<tr><th>Symbol</th><th class="wrap">Name</th><th class="num">Appearances</th><th>Last seen</th>
+    <th class="num">Total gross ₹Cr</th><th class="num">Total net ₹Cr</th></tr>
+{% for r in rows %}
+<tr>
+  <td><a href="{{ url_for('stock', symbol=r.symbol) }}"><strong>{{ r.symbol }}</strong></a></td>
+  <td class="wrap muted">{{ r.name or "" }}</td>
+  <td class="num">{{ r.appearances }}</td>
+  <td>{{ r.last_seen }}</td>
+  <td class="num">{{ r.total_gross|cr }}</td>
+  <td class="num">{{ r.total_net|cr }}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+<script>
+function flt() {
+  const q = document.getElementById('q').value.toUpperCase();
+  for (const tr of document.querySelectorAll('#tbl tr')) {
+    if (!tr.querySelector('td')) continue;
+    tr.style.display = tr.textContent.toUpperCase().includes(q) ? '' : 'none';
+  }
+}
+</script>
+{% endblock %}

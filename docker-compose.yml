@@ -1,0 +1,46 @@
+# Production stack for propfirmsdealz.com — three services, one shared /data volume:
+#   caddy     — reverse proxy, terminates HTTPS with automatic Let's Encrypt certs
+#   web       — the command-center dashboard (waitress), internal only
+#   scheduler — runs `run-daily` every weekday at 19:30 IST (exchanges publish
+#               deals ~18:30 IST); override the time with PFT_RUN_AT=HH:MM
+#
+# Config comes from a .env file next to this one (see .env.example):
+#   SITE_ADDRESS, ACME_EMAIL   (and optionally BASIC_AUTH_* to lock it down)
+services:
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - SITE_ADDRESS=${SITE_ADDRESS:-propfirmsdealz.com, www.propfirmsdealz.com}
+      - ACME_EMAIL=${ACME_EMAIL}
+    depends_on:
+      - web
+    restart: unless-stopped
+
+  web:
+    build: .
+    # No host port publish — only Caddy reaches it, over the internal network.
+    expose:
+      - "8050"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+
+  scheduler:
+    build: .
+    command: ["bash", "scripts/scheduler.sh"]
+    volumes:
+      - ./data:/data
+    environment:
+      - PFT_RUN_AT=${PFT_RUN_AT:-19:30}
+    restart: unless-stopped
+
+volumes:
+  caddy_data:    # persisted TLS certificates — do not delete
+  caddy_config:

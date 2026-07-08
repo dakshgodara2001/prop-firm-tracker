@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}Command Center — {{ the_date or "no data" }}{% endblock %}
+
+{% macro slink(s) -%}
+<a href="{{ url_for('stock', symbol=s.symbol) }}"><strong>{{ s.symbol }}</strong></a>
+{%- endmacro %}
+
+{% macro fbadge(s) -%}
+<span class="badge flow-{{ s.classification }}">{{ s.classification|flow }}</span>
+{%- endmacro %}
+
+{% block content %}
+
+<div style="display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;">
+  <h1>Command center</h1>
+  <span class="sub datebar">
+    {% if the_date %}<span class="cur">{{ the_date }}</span>{% endif %}
+    {% for d in dates[:10] %}{% if d != the_date %}<a href="{{ url_for('dashboard', date=d) }}">{{ d[5:] }}</a>{% endif %}{% endfor %}
+  </span>
+</div>
+
+{% if not the_date %}
+<div class="panel"><span class="muted">No processed data yet — run <code>python main.py run-daily</code>.</span></div>
+{% elif not stocks %}
+<div class="panel"><span class="muted">No tracked prop/HFT firms appeared in bulk/block deals on {{ the_date }}.</span></div>
+{% else %}
+
+<div class="stance">{{ stance }}</div>
+
+{# Daily overview: KPI strip + week-at-a-glance gross bars #}
+<h2 style="margin-top:12px">Daily overview</h2>
+<div class="kpis">
+  <div class="kpi"><div class="v">{{ kpis.stocks }}</div><div class="k">stocks</div></div>
+  <div class="kpi"><div class="v">{{ kpis.firms }}</div><div class="k">firms</div></div>
+  <div class="kpi"><div class="v">{{ kpis.gross|cr }}<span class="unit"> cr</span></div><div class="k">gross</div></div>
+  <div class="kpi"><div class="v">{{ kpis.directional_net|cr }}<span class="unit"> cr</span></div><div class="k">dir |net|</div></div>
+  <div class="kpi"><div class="v">{{ (kpis.churn_share * 100)|round|int }}<span class="unit">%</span></div><div class="k">churn</div></div>
+  <div class="kpi"><div class="v">{{ kpis.multi_firm }}</div><div class="k">multi-firm</div></div>
+  <div class="kpi"><div class="v">{{ kpis.new_mentions }}</div><div class="k">new</div></div>
+  <div class="kpi"><div class="v">{{ kpis.repeat_mentions }}</div><div class="k">repeat</div></div>
+  <div class="kpi"><div class="v">{{ kpis.alerts }}</div><div class="k">alerts</div></div>
+  <div class="kpi spark" aria-label="gross tracked value by session">
+    {% for w in week %}
+    <div class="col {{ 'cur' if w.trade_date == the_date }}"
+         style="height:{{ (34 * w.gross / week_max)|round|int + 2 }}px"
+         title="{{ w.trade_date }} · ₹{{ w.gross|cr }} Cr · {{ w.n }} stocks"></div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="layout">
+<div>
+  {# The single source of truth: one grid, faceted by chips. #}
+  <h2>Stocks picked by tracked firms <span class="amber">// click a row for the read</span></h2>
+  <div class="chips" id="chips">
+    <span class="chip on" data-k="all">All<span class="n">{{ stocks|length }}</span></span>
+    <span class="chip" data-k="high">High attention<span class="n">{{ sections.high|length }}</span></span>
+    <span class="chip" data-k="multi">Multi-firm activity<span class="n">{{ sections.multi|length }}</span></span>
+    <span class="chip" data-k="dir">Clean net buy / sell<span class="n">{{ sections.directional|length }}</span></span>
+    <span class="chip" data-k="churn">Round-trip / liquidity churn<span class="n">{{ sections.churn|length }}</span></span>
+    <span class="chip" data-k="new">New stock mentions<span class="n">{{ sections.new|length }}</span></span>
+    <span class="chip" data-k="repeat">Repeat mentions<span class="n">{{ sections.repeat|length }}</span></span>
+    <span class="chip" data-k="watch">Watchlist additions<span class="n">{{ sections.watch|length }}</span></span>
+  </div>
+  <div class="panel tight">
+  <table id="grid">
+    <thead>
+    <tr><th>Symbol</th><th>Attn</th><th>Flow</th><th class="num">F</th><th>Buy/Sell</th>
+        <th class="num">Gross cr</th><th class="num">Net cr</th><th class="num">Day</th>
+        <th class="num">V/ADV</th><th class="num">30d</th><th></th></tr>
+    </thead>
+    <tbody>
+    {% for s in stocks %}
+    {% set gid = loop.index %}
+    <tr class="xrow" data-x="{{ gid }}"
+        data-f="all{{ ' high' if s.is_high }}{{ ' multi' if s.firm_count >= 2 }}{{ ' dir' if s.is_dir }}{{ ' churn' if s.classification == 'ROUND_TRIP' }}{{ ' new' if s.first_time }}{{ ' repeat' if s.is_repeat }}{{ ' watch' if s.is_watch }}">
+      <td>{{ slink(s) }}{% if s.first_time %} <span class="tag new">NEW</span>{% endif %}{% if s.is_watch %} <span class="tag">WATCH</span>{% endif %}</td>
+      <td><span class="attn-wrap"><span class="attn-num">{{ s.attention|attn }}</span>
+          <span class="meter {{ 'low' if (s.attention or 0) < 40 }}"><i style="width:{{ (s.attention or 0)|round|int }}%"></i></span></span></td>
+      <td>{{ fbadge(s) }}</td>
+      <td class="num">{{ s.firm_count }}</td>
+      <td>{% set g = s.buy_value + s.sell_value %}
+          <span class="split" title="buy ₹{{ s.buy_value|cr }} Cr / sell ₹{{ s.sell_value|cr }} Cr">
+            <i class="b" style="width:{{ (60 * s.buy_value / g)|round|int if g else 0 }}px"></i><i class="s" style="width:{{ (60 * s.sell_value / g)|round|int if g else 0 }}px"></i>
+          </span></td>
+      <td class="num">{{ s.gross_value|cr }}</td>
+      <td class="num {{ 'pos' if s.net_value > 0 else 'neg' if s.net_value < 0 }}">{{ s.net_value|cr }}</td>
+      <td class="num {{ 'pos' if (s.day_return_pct or 0) > 0 else 'neg' if (s.day_return_pct or 0) < 0 }}">{{ s.day_return_pct|pct }}</td>
+      <td class="num">{{ s.volume_vs_adv|xadv }}</td>
+      <td class="num">{{ (s.recent_count or 0) + 1 }}</td>
+      <td class="muted" style="font:10px var(--mono)">{{ s.deal_types or "" }}</td>
+    </tr>
+    <tr class="xdetail" data-d="{{ gid }}">
+      <td colspan="11">{{ s.explanation or "" }}
+        <br><b>Firms:</b> {{ s.firm_names }}{% if s.churn_firm_count and s.is_dir %} · <b>{{ s.churn_firm_count }}</b> firm(s) churned it alongside{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <details class="audit">
+    <summary>Raw deals / audit trail — {{ raw_rows|length }} disclosed rows · fetch health</summary>
+    <div class="inner">
+      {% if fetch_rows %}
+      <table style="margin-bottom:10px">
+        <tr><th>Source</th><th>Report</th><th>Status</th><th>Strategy</th><th class="num">Rows</th></tr>
+        {% for r in fetch_rows %}
+        <tr><td>{{ r.source }}</td><td>{{ r.deal_type }}</td><td>{{ r.status }}</td>
+            <td class="muted">{{ r.strategy or "–" }}</td><td class="num">{{ r.row_count }}</td></tr>
+        {% endfor %}
+      </table>
+      {% endif %}
+      {% if raw_rows %}
+      <table>
+        <tr><th>Symbol</th><th>Src</th><th>Type</th><th>Firm</th><th>Side</th><th class="num">Qty</th>
+            <th class="num">Price</th><th class="num">Value cr</th><th class="wrap">Disclosed client name</th></tr>
+        {% for r in raw_rows %}
+        <tr>
+          <td><a href="{{ url_for('stock', symbol=r.symbol) }}">{{ r.symbol }}</a></td>
+          <td>{{ r.source }}</td><td>{{ r.deal_type }}</td>
+          <td><a href="{{ url_for('firm', firm_id=r.firm_id) }}">{{ r.firm_name }}</a></td>
+          <td class="{{ 'pos' if r.side == 'BUY' else 'neg' }}">{{ r.side }}</td>
+          <td class="num">{{ r.quantity|num }}</td>
+          <td class="num">{{ r.price|price }}</td>
+          <td class="num">{{ (r.quantity * (r.price or 0))|cr }}</td>
+          <td class="wrap muted">{{ r.client_name }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}<p class="muted">No tracked-firm raw deals for this date.</p>{% endif %}
+    </div>
+  </details>
+</div>
+
+<div class="rail">
+  <h2 style="margin-top:0">Top stocks to watch</h2>
+  <div class="panel">
+    {% if picks %}
+    <ul>
+      {% for s in picks %}
+      <li><span class="rank">{{ loop.index }}</span>{{ slink(s) }}
+          <span class="attn">{{ s.attention|attn }}</span> {{ fbadge(s) }}
+          {% if s.pick_kind == 'liquidity_event' %}<span class="tag">EVENT</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% else %}<span class="muted">Routine churn only.</span>{% endif %}
+  </div>
+
+  {% if changes.prev_date %}
+  <h2>What changed <span class="amber">vs {{ changes.prev_date }}</span></h2>
+  <div class="panel">
+    <ul>
+    {% for b in changes.bullets %}<li>{{ b|replace('**','')|safe }}</li>{% else %}
+      <li class="muted">Entirely fresh set of names.</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <h2>Follow-up checklist</h2>
+  <div class="panel">
+    <ul class="check">
+    {% for item in checklist %}<li>{{ item|replace('**','')|safe }}</li>{% endfor %}
+    </ul>
+  </div>
+
+  <h2>{{ alerts|length }} alert(s) <span class="amber">// <a href="{{ url_for('alerts_page') }}">feed</a></span></h2>
+  <div class="panel">
+    {% if alerts %}
+    <ul>
+      {% for a in alerts[:8] %}
+      <li><span class="dot prio-{{ a.priority }}">●</span>
+          <a href="{{ url_for('stock', symbol=a.symbol) }}"><strong>{{ a.symbol }}</strong></a>
+          <span class="alert-type">{{ a.alert_type|alert_label }}</span>
+          <span class="ellip" title="{{ a.message }}">{{ a.message }}</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}<span class="muted">None.</span>{% endif %}
+  </div>
+</div>
+</div>
+
+<script>
+(function () {
+  const chips = document.querySelectorAll('#chips .chip');
+  chips.forEach(c => c.addEventListener('click', () => {
+    chips.forEach(x => x.classList.remove('on'));
+    c.classList.add('on');
+    const k = c.dataset.k;
+    document.querySelectorAll('#grid tr.xrow').forEach(tr => {
+      const show = tr.dataset.f.split(' ').includes(k);
+      tr.style.display = show ? '' : 'none';
+      const d = document.querySelector(`#grid tr.xdetail[data-d="${tr.dataset.x}"]`);
+      if (d && !show) d.classList.remove('show');
+      if (d) d.style.display = show && d.classList.contains('show') ? 'table-row' : 'none';
+    });
+  }));
+  document.querySelectorAll('#grid tr.xrow').forEach(tr => tr.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return;
+    const d = document.querySelector(`#grid tr.xdetail[data-d="${tr.dataset.x}"]`);
+    if (!d) return;
+    tr.classList.toggle('open');
+    d.classList.toggle('show');
+    d.style.display = d.classList.contains('show') ? 'table-row' : 'none';
+  }));
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Firms{% endblock %}
+{% block content %}
+<h1>Tracked firms</h1>
+<p class="sub">Firm pages are the supporting view — stocks are the product. Directional vs round-trip counts show each firm's style.</p>
+<div class="card">
+<table>
+<tr><th>Firm</th><th class="num">Days</th><th class="num">Stocks</th><th class="num">Gross ₹Cr</th>
+    <th class="num">Net ₹Cr</th><th class="num">Directional rows</th><th class="num">Round-trip rows</th></tr>
+{% for r in rows %}
+<tr>
+  <td><a href="{{ url_for('firm', firm_id=r.id) }}">{{ r.name }}</a></td>
+  <td class="num">{{ r.days or 0 }}</td>
+  <td class="num">{{ r.symbols or 0 }}</td>
+  <td class="num">{{ r.gross|cr }}</td>
+  <td class="num">{{ r.net|cr }}</td>
+  <td class="num">{{ r.directional_rows or 0 }}</td>
+  <td class="num">{{ r.churn_rows or 0 }}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+{% endblock %}

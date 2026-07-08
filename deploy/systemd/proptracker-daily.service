@@ -1,0 +1,12 @@
+# One-shot daily pipeline run, driven by proptracker-daily.timer.
+[Unit]
+Description=Prop-Firm Deal Intelligence daily pipeline
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=proptracker
+WorkingDirectory=/opt/prop-firm-tracker
+ExecStart=/opt/prop-firm-tracker/.venv/bin/python main.py run-daily
+# exit code 2 = a deal fetch failed; surfaces as a unit failure for alerting

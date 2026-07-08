@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ firm.name }} — firm page{% endblock %}
+{% block content %}
+<h1>{{ firm.name }}</h1>
+<p class="sub">Tracked firm · aliases:
+  {% for a in aliases %}<code>{{ a.alias }}</code>{% if a.match_mode == 'exact' %}<span class="muted">(exact-only)</span>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}
+</p>
+
+<div class="tiles">
+  <div class="tile"><div class="v">{{ summary.days or 0 }}</div><div class="k">active days</div></div>
+  <div class="tile"><div class="v">{{ summary.symbols or 0 }}</div><div class="k">stocks touched</div></div>
+  <div class="tile"><div class="v">{{ summary.gross|cr }}</div><div class="k">gross ₹ Cr</div></div>
+  <div class="tile"><div class="v">{{ summary.net|cr }}</div><div class="k">net ₹ Cr</div></div>
+  <div class="tile"><div class="v">{{ summary.directional_rows or 0 }} / {{ summary.churn_rows or 0 }}</div>
+       <div class="k">directional vs round-trip rows</div></div>
+</div>
+
+<h2>Recent stocks touched</h2>
+<div class="card">
+{% if recent %}
+<table>
+<tr><th>Date</th><th>Symbol</th><th>Type</th><th>Activity</th><th class="num">Buy ₹Cr</th>
+    <th class="num">Sell ₹Cr</th><th class="num">Gross ₹Cr</th><th class="num">Net ₹Cr</th></tr>
+{% for r in recent %}
+<tr>
+  <td>{{ r.trade_date }}</td>
+  <td><a href="{{ url_for('stock', symbol=r.symbol) }}"><strong>{{ r.symbol }}</strong></a></td>
+  <td>{{ r.deal_type }}</td>
+  <td><span class="badge flow-{{ r.classification }}">{{ r.classification|flow }}</span></td>
+  <td class="num">{{ r.buy_value|cr }}</td>
+  <td class="num">{{ r.sell_value|cr }}</td>
+  <td class="num">{{ (r.buy_value + r.sell_value)|cr }}</td>
+  <td class="num">{{ r.net_value|cr }}</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}<p class="muted">No stored activity for this firm yet.</p>{% endif %}
+</div>
+{% endblock %}
