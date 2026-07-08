@@ -175,6 +175,10 @@ def create_app(db_path=None) -> Flask:
             matrix=matrix,
         )
 
+    @app.route("/google2b499825738e898a.html")
+    def google_site_verification():
+        return app.send_static_file("google2b499825738e898a.html")
+
     @app.route("/healthz")
     def healthz():
         try:
