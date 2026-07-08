@@ -17,6 +17,7 @@ from typing import Optional
 
 from flask import Flask, g, jsonify, render_template, request
 
+from . import charts
 from .. import brief, config
 from .. import db as db_module
 from ..aggregate import CLASS_LABELS, ROUND_TRIP, STOCK_DIRECTIONAL_CLASSES
@@ -168,6 +169,7 @@ def create_app(db_path=None) -> Flask:
             if the_date
             else []
         )
+        matrix = charts.firm_stock_matrix(connection, the_date) if the_date else None
         return render_template(
             "dashboard.html",
             the_date=the_date,
@@ -184,6 +186,7 @@ def create_app(db_path=None) -> Flask:
             fetch_rows=fetch_rows,
             week=week,
             week_max=week_max,
+            matrix=matrix,
         )
 
     @app.route("/healthz")
@@ -246,6 +249,7 @@ def create_app(db_path=None) -> Flask:
             "SELECT * FROM alerts WHERE symbol = ? ORDER BY trade_date DESC, priority LIMIT 25",
             (symbol,),
         ).fetchall()
+        pricechart = charts.stock_price_svg(conn(), symbol)
         return render_template(
             "stock.html",
             symbol=symbol,
@@ -255,6 +259,7 @@ def create_app(db_path=None) -> Flask:
             raw_rows=raw_rows,
             prices=prices,
             stock_alerts=stock_alerts,
+            pricechart=pricechart,
         )
 
     @app.route("/stocks")

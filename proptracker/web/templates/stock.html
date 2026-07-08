@@ -24,6 +24,21 @@
   <strong>Latest read ({{ latest.trade_date }}):</strong> {{ latest.explanation or "No explanation computed." }}
 </div>
 
+{% if pricechart %}
+<h2>Price &amp; tracked-firm entries <span class="amber">// markers = days tracked firms were active · hover for the read</span></h2>
+<div class="card">
+  {{ pricechart.svg|safe }}
+  <div class="legend">
+    <span><i style="background:var(--buy)"></i>Clean buy</span>
+    <span><i style="background:var(--sell)"></i>Clean sell</span>
+    <span><i style="background:var(--pbuy)"></i>Partial buy</span>
+    <span><i style="background:var(--psell)"></i>Partial sell</span>
+    <span><i style="background:var(--mixed)"></i>Mixed</span>
+    <span><i style="background:var(--churn)"></i>Round-trip / churn</span>
+  </div>
+</div>
+{% endif %}
+
 <h2>Firm-wise activity on {{ latest.trade_date }}</h2>
 <div class="card">
 <table>

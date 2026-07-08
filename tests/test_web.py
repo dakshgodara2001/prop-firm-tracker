@@ -47,6 +47,21 @@ def test_dashboard_shows_command_center_sections(client):
     assert "not buy/sell advice" in html
 
 
+def test_dashboard_has_firm_stock_matrix(client):
+    html = client.get("/").get_data(as_text=True)
+    assert "Firm × stock activity map" in html
+    assert "<svg" in html and "Firm by stock activity matrix" in html
+    assert "<circle" in html          # at least one firm-stock dot
+    assert "Round-trip / churn" in html  # legend present (multi-series)
+
+
+def test_stock_page_has_price_chart(client):
+    html = client.get("/stock/ALPHACO").get_data(as_text=True)
+    assert "Price &amp; tracked-firm entries" in html
+    assert "close price with tracked-firm activity markers" in html
+    assert "<polyline" in html         # the price line
+
+
 def test_healthz(client):
     response = client.get("/healthz")
     assert response.status_code == 200
