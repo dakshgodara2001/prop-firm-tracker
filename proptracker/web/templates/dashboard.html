@@ -65,15 +65,16 @@
       {% if matrix.truncated %}<p class="note">Showing the top {{ matrix.n_stocks }} of {{ matrix.total_stocks }} stocks by attention.</p>{% endif %}
     </div>
   </div>
-  <div>
+  <div class="rail">
     <h2>Top stocks to watch</h2>
     <div class="panel">
       {% if picks %}
-      <ul>
+      <ul class="picklist">
         {% for s in picks %}
         <li><span class="rank">{{ loop.index }}</span>{{ slink(s) }}
             <span class="attn">{{ s.attention|attn }}</span> {{ fbadge(s) }}
-            {% if s.pick_kind == 'liquidity_event' %}<span class="tag">EVENT</span>{% endif %}</li>
+            {% if s.pick_kind == 'liquidity_event' %}<span class="tag">EVENT</span>{% endif %}
+            <span class="ellip why" data-tip="{{ s.explanation or '' }}">{{ s.explanation or "" }}</span></li>
         {% endfor %}
       </ul>
       {% else %}<span class="muted">Routine churn only — nothing directional to flag.</span>{% endif %}
@@ -81,6 +82,28 @@
   </div>
 </div>
 {% endif %}
+
+<div class="grid">
+  {% if changes.prev_date %}
+  <div>
+    <h2>What changed <span class="amber">vs {{ changes.prev_date }}</span></h2>
+    <div class="panel rail">
+      <ul>
+      {% for b in changes.bullets %}<li>{{ b|replace('**','')|safe }}</li>{% else %}
+        <li class="muted">Entirely fresh set of names.</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+  <div>
+    <h2>Follow-up checklist</h2>
+    <div class="panel rail">
+      <ul class="check">
+      {% for item in checklist %}<li>{{ item|replace('**','')|safe }}</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
 
 <div class="layout">
 <div>
@@ -168,28 +191,11 @@
 </div>
 
 <div class="rail">
-  {% if changes.prev_date %}
-  <h2>What changed <span class="amber">vs {{ changes.prev_date }}</span></h2>
-  <div class="panel">
-    <ul>
-    {% for b in changes.bullets %}<li>{{ b|replace('**','')|safe }}</li>{% else %}
-      <li class="muted">Entirely fresh set of names.</li>{% endfor %}
-    </ul>
-  </div>
-  {% endif %}
-
-  <h2>Follow-up checklist</h2>
-  <div class="panel">
-    <ul class="check">
-    {% for item in checklist %}<li>{{ item|replace('**','')|safe }}</li>{% endfor %}
-    </ul>
-  </div>
-
   <h2>{{ alerts|length }} alert(s) <span class="amber">// <a href="{{ url_for('alerts_page') }}">feed</a></span></h2>
-  <div class="panel">
+  <div class="panel feed">
     {% if alerts %}
     <ul>
-      {% for a in alerts[:8] %}
+      {% for a in alerts %}
       <li><span class="dot prio-{{ a.priority }}">●</span>
           <a href="{{ url_for('stock', symbol=a.symbol) }}"><strong>{{ a.symbol }}</strong></a>
           <span class="alert-type">{{ a.alert_type|alert_label }}</span>

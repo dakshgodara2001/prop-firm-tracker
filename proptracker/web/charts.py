@@ -48,7 +48,7 @@ def _tipattr(text: str) -> str:
     return _esc(text).replace("\n", "&#10;")
 
 
-def _radius(gross: float, gmax: float, rmin: float = 4.0, rmax: float = 13.0) -> float:
+def _radius(gross: float, gmax: float, rmin: float = 3.5, rmax: float = 11.0) -> float:
     if gmax <= 0:
         return rmin
     return rmin + (rmax - rmin) * (gross / gmax) ** 0.5
@@ -98,8 +98,8 @@ def firm_stock_matrix(conn: sqlite3.Connection, trade_date: str,
     cell = {(r["firm"], r["symbol"]): r for r in rows if r["symbol"] in stock_set}
     gmax = max((r["gross"] for r in rows if r["symbol"] in stock_set), default=0.0)
 
-    # geometry
-    padL, padT, pitch, padR, padB = 150, 66, 30, 16, 14
+    # geometry (kept tight — the map shares its row with the picks column)
+    padL, padT, pitch, padR, padB = 148, 60, 26, 14, 10
     w = padL + len(stocks) * pitch + padR
     h = padT + len(firms) * pitch + padB
     cx = lambda i: padL + i * pitch + pitch / 2
