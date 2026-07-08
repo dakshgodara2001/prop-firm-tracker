@@ -17,6 +17,16 @@
     {% if the_date %}<span class="cur">{{ the_date }}</span>{% endif %}
     {% for d in dates[:10] %}{% if d != the_date %}<a href="{{ url_for('dashboard', date=d) }}">{{ d[5:] }}</a>{% endif %}{% endfor %}
   </span>
+  {% if the_date %}
+  <span class="sparkline" aria-label="gross tracked value by session">
+    {% for w in week %}
+    <i class="{{ 'cur' if w.trade_date == the_date }}"
+       style="height:{{ (14 * w.gross / week_max)|round|int + 2 }}px"
+       data-tip="{{ w.trade_date }}&#10;₹{{ w.gross|cr }} Cr gross&#10;{{ w.n }} stocks touched"></i>
+    {% endfor %}
+  </span>
+  {% if alerts_count %}<a class="alertlink" href="{{ url_for('alerts_page') }}">{{ alerts_count }} ALERTS →</a>{% endif %}
+  {% endif %}
 </div>
 
 {% if not the_date %}
@@ -26,27 +36,6 @@
 {% else %}
 
 <div class="stance">{{ stance }}</div>
-
-{# Daily overview: KPI strip + week-at-a-glance gross bars #}
-<h2 style="margin-top:12px">Daily overview</h2>
-<div class="kpis">
-  <div class="kpi"><div class="v">{{ kpis.stocks }}</div><div class="k">stocks</div></div>
-  <div class="kpi"><div class="v">{{ kpis.firms }}</div><div class="k">firms</div></div>
-  <div class="kpi"><div class="v">{{ kpis.gross|cr }}<span class="unit"> cr</span></div><div class="k">gross</div></div>
-  <div class="kpi"><div class="v">{{ kpis.directional_net|cr }}<span class="unit"> cr</span></div><div class="k">dir |net|</div></div>
-  <div class="kpi"><div class="v">{{ (kpis.churn_share * 100)|round|int }}<span class="unit">%</span></div><div class="k">churn</div></div>
-  <div class="kpi"><div class="v">{{ kpis.multi_firm }}</div><div class="k">multi-firm</div></div>
-  <div class="kpi"><div class="v">{{ kpis.new_mentions }}</div><div class="k">new</div></div>
-  <div class="kpi"><div class="v">{{ kpis.repeat_mentions }}</div><div class="k">repeat</div></div>
-  <div class="kpi"><div class="v">{{ kpis.alerts }}</div><div class="k">alerts</div></div>
-  <div class="kpi spark" aria-label="gross tracked value by session">
-    {% for w in week %}
-    <div class="col {{ 'cur' if w.trade_date == the_date }}"
-         style="height:{{ (34 * w.gross / week_max)|round|int + 2 }}px"
-         data-tip="{{ w.trade_date }}&#10;₹{{ w.gross|cr }} Cr gross&#10;{{ w.n }} stocks touched"></div>
-    {% endfor %}
-  </div>
-</div>
 
 {% if matrix %}
 <div class="maprow">
@@ -83,32 +72,18 @@
 </div>
 {% endif %}
 
-<div class="grid">
-  {% if changes.prev_date %}
-  <div>
-    <h2>What changed <span class="amber">vs {{ changes.prev_date }}</span></h2>
-    <div class="panel rail">
-      <ul>
-      {% for b in changes.bullets %}<li>{{ b|replace('**','')|safe }}</li>{% else %}
-        <li class="muted">Entirely fresh set of names.</li>{% endfor %}
-      </ul>
-    </div>
-  </div>
-  {% endif %}
-  <div>
-    <h2>Follow-up checklist</h2>
-    <div class="panel rail">
-      <ul class="check">
-      {% for item in checklist %}<li>{{ item|replace('**','')|safe }}</li>{% endfor %}
-      </ul>
-    </div>
-  </div>
+{% if changes.prev_date %}
+<h2>What changed <span class="amber">vs {{ changes.prev_date }}</span></h2>
+<div class="panel rail">
+  <ul class="cols2">
+  {% for b in changes.bullets %}<li>{{ b|replace('**','')|safe }}</li>{% else %}
+    <li class="muted">Entirely fresh set of names.</li>{% endfor %}
+  </ul>
 </div>
+{% endif %}
 
-<div class="layout">
-<div>
-  {# The single source of truth: one grid, faceted by chips. #}
-  <h2>Stocks picked by tracked firms <span class="amber">// click any row to expand</span></h2>
+{# The single source of truth: one grid, faceted by chips. #}
+<h2>Stocks picked by tracked firms <span class="amber">// click any row to expand</span></h2>
   <div class="chips" id="chips">
     <span class="chip on" data-k="all">All<span class="n">{{ stocks|length }}</span></span>
     <span class="chip" data-k="high">High attention<span class="n">{{ sections.high|length }}</span></span>
@@ -188,24 +163,6 @@
       {% else %}<p class="muted">No tracked-firm raw deals for this date.</p>{% endif %}
     </div>
   </details>
-</div>
-
-<div class="rail">
-  <h2>{{ alerts|length }} alert(s) <span class="amber">// <a href="{{ url_for('alerts_page') }}">feed</a></span></h2>
-  <div class="panel feed">
-    {% if alerts %}
-    <ul>
-      {% for a in alerts %}
-      <li><span class="dot prio-{{ a.priority }}">●</span>
-          <a href="{{ url_for('stock', symbol=a.symbol) }}"><strong>{{ a.symbol }}</strong></a>
-          <span class="alert-type">{{ a.alert_type|alert_label }}</span>
-          <span class="ellip" title="{{ a.message }}">{{ a.message }}</span></li>
-      {% endfor %}
-    </ul>
-    {% else %}<span class="muted">None.</span>{% endif %}
-  </div>
-</div>
-</div>
 
 <script>
 (function () {

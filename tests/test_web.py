@@ -27,23 +27,27 @@ def client(tmp_path):
         yield test_client
 
 
-def test_dashboard_shows_command_center_sections(client):
+def test_dashboard_shows_minimal_command_center(client):
     html = client.get("/").get_data(as_text=True)
-    assert "Daily overview" in html
+    # the five kept blocks
+    assert "DESK NOTE" in html or "stance" in html
     assert "Top stocks to watch" in html
-    assert "Follow-up checklist" in html
-    assert "High attention" in html
     assert "Stocks picked by tracked firms" in html
-    assert "Multi-firm activity" in html
-    assert "Clean net buy / sell" in html
-    assert "Round-trip / liquidity churn" in html
-    assert "New stock mentions" in html
-    assert "Repeat mentions" in html
-    assert "Watchlist additions" in html
     assert "Raw deals / audit trail" in html
+    assert "ALERTS →" in html  # alert count lives in the title row now
+    # chips act as the section filters
+    for chip in (
+        "High attention", "Multi-firm activity", "Clean net buy / sell",
+        "Round-trip / liquidity churn", "New stock mentions", "Repeat mentions",
+        "Watchlist additions",
+    ):
+        assert chip in html
+    # struck sections stay struck (redundant with desk note / chips / picks)
+    assert "Daily overview" not in html
+    assert "Follow-up checklist" not in html
+    assert 'class="kpis"' not in html
     assert "ALPHACO" in html and "BETACO" in html
     assert "GRAVITON RESEARCH CAPITAL LLP" in html  # raw audit rows on dashboard
-    assert "alert(s)" in html
     assert "not buy/sell advice" in html
 
 

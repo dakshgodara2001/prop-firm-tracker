@@ -83,15 +83,7 @@ def create_app(db_path=None) -> Flask:
         connection = conn()
         stocks = brief.enrich_stocks(connection, the_date) if the_date else []
         kpis = brief.day_kpis(connection, the_date, stocks) if the_date else {}
-        alerts = (
-            connection.execute(
-                """SELECT * FROM alerts WHERE trade_date = ?
-                   ORDER BY priority, id""",
-                (the_date,),
-            ).fetchall()
-            if the_date
-            else []
-        )
+        alerts_count = kpis.get("alerts", 0) if the_date else 0
         directional = sorted(
             (s for s in stocks if s["classification"] in STOCK_DIRECTIONAL_CLASSES),
             key=lambda s: -abs(s["net_value"]),
@@ -142,11 +134,6 @@ def create_app(db_path=None) -> Flask:
             if the_date
             else {"prev_date": None, "bullets": []}
         )
-        checklist = (
-            brief.follow_up_checklist(connection, the_date, stocks, sections["watch"])
-            if the_date and stocks
-            else []
-        )
         raw_rows = (
             connection.execute(
                 """SELECT r.*, f.name AS firm_name, f.id AS firm_id
@@ -179,9 +166,8 @@ def create_app(db_path=None) -> Flask:
             stance=stance,
             picks=picks,
             changes=changes,
-            checklist=checklist,
             sections=sections,
-            alerts=alerts,
+            alerts_count=alerts_count,
             raw_rows=raw_rows,
             fetch_rows=fetch_rows,
             week=week,

@@ -201,6 +201,17 @@
   .rank { font:800 10.5px var(--mono); color:var(--accent-2); margin-right:6px; }
   .picklist li { margin-bottom:9px; }
   .picklist .why { color:var(--ink-3); font-size:11px; margin:2px 0 0 21px; }
+  .sparkline { display:inline-flex; align-items:flex-end; gap:2px; height:16px; margin-left:4px; }
+  .sparkline i { display:inline-block; width:6px; min-height:2px; border-radius:1px 1px 0 0;
+                 background:linear-gradient(180deg, var(--accent), var(--accent-2)); opacity:.3; }
+  .sparkline i.cur { opacity:1; }
+  .alertlink { font:700 10px var(--mono); letter-spacing:.1em; color:var(--accent);
+               border:1px solid var(--accent-2); background:rgba(232,179,57,.08);
+               padding:2px 8px; border-radius:3px; }
+  .alertlink:hover { text-decoration:none; background:rgba(232,179,57,.16); }
+  ul.cols2 { columns:2; column-gap:28px; }
+  ul.cols2 li { break-inside:avoid; }
+  @media (max-width:900px){ ul.cols2 { columns:1; } }
 
   /* expandable grid rows */
   tr.xrow { cursor:pointer; }
