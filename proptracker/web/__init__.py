@@ -12,10 +12,12 @@ Run with:  python main.py serve   (default http://127.0.0.1:8050)
 """
 from __future__ import annotations
 
+import os
 import sqlite3
 from typing import Optional
+from xml.sax.saxutils import escape
 
-from flask import Flask, g, jsonify, render_template, request
+from flask import Flask, Response, g, jsonify, render_template, request, url_for
 
 from . import charts
 from .. import brief, config
@@ -178,6 +180,53 @@ def create_app(db_path=None) -> Flask:
     @app.route("/google2b499825738e898a.html")
     def google_site_verification():
         return app.send_static_file("google2b499825738e898a.html")
+
+    base_url = os.environ.get("PFT_BASE_URL", "https://propfirmsdealz.com").rstrip("/")
+
+    @app.route("/robots.txt")
+    def robots_txt():
+        body = (
+            "User-agent: *\n"
+            "Allow: /\n"
+            "Disallow: /healthz\n"
+            f"\nSitemap: {base_url}/sitemap.xml\n"
+        )
+        return Response(body, mimetype="text/plain")
+
+    @app.route("/sitemap.xml")
+    def sitemap_xml():
+        latest = conn().execute(
+            "SELECT MAX(trade_date) AS d FROM daily_stock_agg"
+        ).fetchone()["d"]
+        entries = [(url_for(endpoint), latest) for endpoint in
+                   ("dashboard", "stocks_index", "firms_index", "alerts_page")]
+        entries += [
+            (url_for("stock", symbol=r["symbol"]), r["last_seen"])
+            for r in conn().execute(
+                "SELECT symbol, MAX(trade_date) AS last_seen"
+                " FROM daily_stock_agg GROUP BY symbol"
+            )
+        ]
+        entries += [
+            (url_for("firm", firm_id=r["id"]), r["last_seen"])
+            for r in conn().execute(
+                "SELECT f.id, MAX(a.trade_date) AS last_seen FROM firms f"
+                " JOIN daily_firm_stock_agg a ON a.firm_id = f.id GROUP BY f.id"
+            )
+        ]
+        urls = "".join(
+            "<url>"
+            f"<loc>{escape(base_url + path)}</loc>"
+            + (f"<lastmod>{lastmod}</lastmod>" if lastmod else "")
+            + "</url>"
+            for path, lastmod in entries
+        )
+        xml = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+            f"{urls}</urlset>"
+        )
+        return Response(xml, mimetype="application/xml")
 
     @app.route("/healthz")
     def healthz():
