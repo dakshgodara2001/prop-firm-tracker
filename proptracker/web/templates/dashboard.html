@@ -49,18 +49,36 @@
 </div>
 
 {% if matrix %}
-<h2>Firm × stock activity map <span class="amber">// dot size = gross · colour = flow · hover for the read</span></h2>
-<div class="panel">
-  {{ matrix.svg|safe }}
-  <div class="legend">
-    <span><i style="background:var(--buy)"></i>Clean buy</span>
-    <span><i style="background:var(--sell)"></i>Clean sell</span>
-    <span><i style="background:var(--pbuy)"></i>Partial buy</span>
-    <span><i style="background:var(--psell)"></i>Partial sell</span>
-    <span><i style="background:var(--mixed)"></i>Mixed</span>
-    <span><i style="background:var(--churn)"></i>Round-trip / churn</span>
+<div class="maprow">
+  <div>
+    <h2>Firm × stock activity map <span class="amber">// dot size = gross · colour = flow · hover for the read</span></h2>
+    <div class="panel">
+      {{ matrix.svg|safe }}
+      <div class="legend">
+        <span><i style="background:var(--buy)"></i>Clean buy</span>
+        <span><i style="background:var(--sell)"></i>Clean sell</span>
+        <span><i style="background:var(--pbuy)"></i>Partial buy</span>
+        <span><i style="background:var(--psell)"></i>Partial sell</span>
+        <span><i style="background:var(--mixed)"></i>Mixed</span>
+        <span><i style="background:var(--churn)"></i>Round-trip / churn</span>
+      </div>
+      {% if matrix.truncated %}<p class="note">Showing the top {{ matrix.n_stocks }} of {{ matrix.total_stocks }} stocks by attention.</p>{% endif %}
+    </div>
   </div>
-  {% if matrix.truncated %}<p class="note">Showing the top {{ matrix.n_stocks }} of {{ matrix.total_stocks }} stocks by attention.</p>{% endif %}
+  <div>
+    <h2>Top stocks to watch</h2>
+    <div class="panel">
+      {% if picks %}
+      <ul>
+        {% for s in picks %}
+        <li><span class="rank">{{ loop.index }}</span>{{ slink(s) }}
+            <span class="attn">{{ s.attention|attn }}</span> {{ fbadge(s) }}
+            {% if s.pick_kind == 'liquidity_event' %}<span class="tag">EVENT</span>{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% else %}<span class="muted">Routine churn only — nothing directional to flag.</span>{% endif %}
+    </div>
+  </div>
 </div>
 {% endif %}
 
@@ -150,19 +168,6 @@
 </div>
 
 <div class="rail">
-  <h2 style="margin-top:0">Top stocks to watch</h2>
-  <div class="panel">
-    {% if picks %}
-    <ul>
-      {% for s in picks %}
-      <li><span class="rank">{{ loop.index }}</span>{{ slink(s) }}
-          <span class="attn">{{ s.attention|attn }}</span> {{ fbadge(s) }}
-          {% if s.pick_kind == 'liquidity_event' %}<span class="tag">EVENT</span>{% endif %}</li>
-      {% endfor %}
-    </ul>
-    {% else %}<span class="muted">Routine churn only.</span>{% endif %}
-  </div>
-
   {% if changes.prev_date %}
   <h2>What changed <span class="amber">vs {{ changes.prev_date }}</span></h2>
   <div class="panel">

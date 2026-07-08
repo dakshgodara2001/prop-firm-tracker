@@ -100,7 +100,10 @@
 
   .layout { display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:14px; }
   @media (max-width:1020px){ .layout { grid-template-columns:1fr; } }
+  .maprow { display:grid; grid-template-columns:auto minmax(300px,1fr); gap:14px; align-items:start; }
+  @media (max-width:1020px){ .maprow { grid-template-columns:1fr; } }
   .rail .panel { padding:9px 11px; }
+  .rail h2:first-of-type { margin-top:0; }
   .rail ul { margin:4px 0 2px; padding-left:0; list-style:none; }
   .rail li { margin-bottom:7px; font-size:12px; color:var(--ink-2); }
   .rail li b, .rail li strong { color:var(--ink); font-weight:600; }
